@@ -1,27 +1,17 @@
 version: "3.8"
-volumes:
-  mongo_data:
+
 services:
   backend:
     build: ./backend
     ports:
       - 5000:5000
     environment:
-      - FOO=foo
-      # - SECRET_KEY=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+      - DATABASE_URL=postgres://fabdbuser:NUUU3Gy8XIEOdI%t6LJ^@192.168.99.159:5432/fabdb
+      - SECRET_KEY=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
     volumes:
       - ./backend:/app
     command: uvicorn src.main:app --reload --host 0.0.0.0 --port 5000
-  # mongo:
-  #   image: mongo:5.0
-  #   restart: always
-  #   environment:
-  #     MONGO_INITDB_ROOT_USERNAME: "app_user"
-  #     MONGO_INITDB_ROOT_PASSWORD: "4dm1n4dm1n"
-  #   volumes:
-  #     - mongo_data:/data/app_db
-  #   ports:
-  #     - 27017:27017
+
   frontend:
     build: ./frontend
     volumes:
