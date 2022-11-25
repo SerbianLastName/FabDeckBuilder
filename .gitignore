@@ -1,2 +1,35 @@
+# DOCKER Files
 docker-compose.yaml*
 docker-compose.yaml
+DockerFile
+DockerFile*
+
+# Codesnap photos
+ss
+
+# Logs
+logs
+*.log
+yarn-debug.log*
+yarn-error.log*
+
+# Node modules
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?s
+
+# Venv
+venv
+.env

@@ -15,10 +15,11 @@ async def get_card(card_id) -> CardOutSchema:
 
 
 async def create_card(card, current_user) -> CardOutSchema:
-    card_dict = card.dict(exclude_unset=True)
-    card_dict["author_id"] = current_user.id
-    card_obj = await Cards.create(**card_dict)
-    return await CardOutSchema.from_tortoise_orm(card_obj)
+    if current_user.is_admin == True:
+        card_dict = card.dict(exclude_unset=True)
+        card_obj = await Cards.create(**card_dict)
+        return await CardOutSchema.from_tortoise_orm(card_obj)
+    raise HTTPException(status_code=403, detail=f"Not authorized to create")
 
 
 async def update_card(card_id, card, current_user) -> CardOutSchema:
@@ -27,23 +28,23 @@ async def update_card(card_id, card, current_user) -> CardOutSchema:
     except DoesNotExist:
         raise HTTPException(status_code=404, detail=f"Card {card_id} not found")
 
-    if db_card.author.id == current_user.id:
+    if current_user.is_admin != True:
         await Cards.filter(id=card_id).update(**card.dict(exclude_unset=True))
         return await CardOutSchema.from_queryset_single(Cards.get(id=card_id))
 
     raise HTTPException(status_code=403, detail=f"Not authorized to update")
 
 
-async def delete_note(note_id, current_user) -> Status:  # UPDATED
+async def delete_card(card_id, current_user) -> Status:  # UPDATED
     try:
-        db_note = await NoteOutSchema.from_queryset_single(Notes.get(id=note_id))
+        db_card = await CardOutSchema.from_queryset_single(Cards.get(id=card_id))
     except DoesNotExist:
-        raise HTTPException(status_code=404, detail=f"Note {note_id} not found")
+        raise HTTPException(status_code=404, detail=f"Card {card_id} not found")
 
     if current_user.is_admin != True:
-        deleted_count = await Notes.filter(id=note_id).delete()
+        deleted_count = await Cards.filter(id=card_id).delete()
         if not deleted_count:
-            raise HTTPException(status_code=404, detail=f"Note {note_id} not found")
-        return Status(message=f"Deleted note {note_id}")  # UPDATED
+            raise HTTPException(status_code=404, detail=f"Card {card_id} not found")
+        return Status(message=f"Deleted card {card_id}")  # UPDATED
 
     raise HTTPException(status_code=403, detail=f"Not authorized to delete")
