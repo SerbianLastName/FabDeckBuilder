@@ -14,11 +14,13 @@ async def get_card(card_id) -> CardOutSchema:
     return await CardOutSchema.from_queryset_single(Cards.get(id=card_id))
 
 
-async def create_card(card, current_user) -> CardOutSchema:
-    if current_user.is_admin == True:
-        card_dict = card.dict(exclude_unset=True)
-        card_obj = await Cards.create(**card_dict)
-        return await CardOutSchema.from_tortoise_orm(card_obj)
+async def create_card(card) -> CardOutSchema:
+    # if current_user.is_admin == True:
+    print("printing card")
+    print(card)
+    card_dict = card.dict(exclude_unset=True)
+    card_obj = await Cards.create(**card_dict)
+    return await CardOutSchema.from_tortoise_orm(card_obj)
     raise HTTPException(status_code=403, detail=f"Not authorized to create")
 
 

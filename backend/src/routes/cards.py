@@ -1,6 +1,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from tortoise.contrib.fastapi import HTTPNotFoundError
 from tortoise.exceptions import DoesNotExist
 
@@ -10,6 +11,7 @@ from src.schemas.cards import CardOutSchema, CardInSchema, UpdateCard
 from src.schemas.token import Status
 from src.schemas.users import UserOutSchema
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 router = APIRouter()
 
@@ -39,12 +41,12 @@ async def get_card(card_id: int) -> CardOutSchema:
 
 
 @router.post(
-    "/cards", response_model=CardOutSchema, dependencies=[Depends(get_current_user)]
+    "/cards", response_model=CardOutSchema, dependencies=[Depends(oauth2_scheme)]
 )
-async def create_card(
-    card: CardInSchema, current_user: UserOutSchema = Depends(get_current_user)
-) -> CardOutSchema:
-    return await crud.create_card(card, current_user)
+# card: CardInSchema,
+async def create_card(card: CardInSchema) -> CardOutSchema:
+    print(card)
+    return await crud.create_card(card)
 
 
 @router.patch(

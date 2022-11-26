@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { loginUser, databaseGetProtected } from "../tools/databaseTools"
+import { databaseGetProtected } from "../tools/databaseTools"
+import { loginUser } from '../tools/jwtTools';
 
 const username = ref("")
 const password = ref("")
@@ -8,8 +9,10 @@ const isPassword = ref(true)
 const validators = ref({ required: value => !!value || 'This field is required' })
 
 const login = async () => {
+    console.log("logging in user")
     let rJson = await loginUser(username.value, password.value)
     if (rJson.success) {
+        console.log("user logged in successfully")
         whoAmI()
         return
     }
@@ -17,7 +20,8 @@ const login = async () => {
 }
 
 const whoAmI = async () => {
-    let rJson = await databaseGetProtected("https://localhost:5000/users/whoami/")
+    console.log("checking user token")
+    let rJson = await databaseGetProtected("users/whoami")
     console.log(rJson)
 
 }

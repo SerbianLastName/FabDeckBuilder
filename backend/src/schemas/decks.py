@@ -14,6 +14,8 @@ DeckOutSchema = pydantic_model_creator(Decks, name="Deck")
 
 class UpdateDeck(BaseModel):
     deckName: Optional[str]
+    deckHero: Optional[str]
+    deckCreator: Optional[str]
     deckPublic: Optional[bool]
     deckBlitz: Optional[bool]
     deckList: Optional[str]
