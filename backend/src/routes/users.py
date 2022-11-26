@@ -1,9 +1,12 @@
+import os
+
 from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
+from jose import jwt
 
 from tortoise.contrib.fastapi import HTTPNotFoundError
 
@@ -15,9 +18,12 @@ from src.schemas.users import UserInSchema, UserOutSchema
 from src.auth.jwthandler import (
     create_access_token,
     get_current_user,
-    ACCESS_TOKEN_EXPIRE_MINUTES,
+    ACCESS_TOKEN_EXPIRE_HOURS,
 )
 
+SECRET_KEY = os.environ.get("SECRET_KEY")
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 router = APIRouter()
 
@@ -38,31 +44,41 @@ async def login(user: OAuth2PasswordRequestForm = Depends()):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     token = jsonable_encoder(access_token)
-    content = {"message": "You've successfully logged in. Welcome back!"}
+    content = {"token": token}
     response = JSONResponse(content=content)
-    response.set_cookie(
-        "Authorization",
-        value=f"Bearer {token}",
-        httponly=True,
-        max_age=1800,
-        expires=1800,
-        samesite="Lax",
-        secure=False,
-    )
-
     return response
 
 
 @router.get(
-    "/users/whoami", response_model=UserOutSchema, dependencies=[Depends(get_current_user)]
+    "/users/whoami",
+    response_model=str,
 )
-async def read_users_me(current_user: UserOutSchema = Depends(get_current_user)):
-    return current_user
+async def read_users_me(token: str = Depends(oauth2_scheme)):
+    username = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])["sub"]
+    content = {"username": username}
+    response = JSONResponse(content=content)
+    return response
+
+
+@router.get(
+    "/users/refresh",
+    response_model=str,
+)
+async def user_refresh(token: str = Depends(oauth2_scheme)):
+    username = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])["sub"]
+    access_token_expires = timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)
+    access_token = create_access_token(
+        data={"sub": username}, expires_delta=access_token_expires
+    )
+    token = jsonable_encoder(access_token)
+    content = {"token": token}
+    response = JSONResponse(content=content)
+    return response
 
 
 @router.delete(
